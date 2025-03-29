@@ -9,15 +9,36 @@ const zhuyinExamples = {
 // 建立音效快取物件
 const audioCache = {};
 
+// 聲調符號列表
+const toneMarks = ['ˇ', 'ˋ', 'ˊ', '˙'];
+
 // 預載入音效
 function preloadAudios() {
     return new Promise((resolve, reject) => {
         const buttons = document.querySelectorAll('button');
         let loadedCount = 0;
-        const totalCount = buttons.length;
+        let totalCount = 0;
+        
+        // 計算需要載入的音效總數（排除聲調符號）
+        buttons.forEach(button => {
+            const sound = button.getAttribute('data-sound');
+            if (!toneMarks.includes(sound)) {
+                totalCount++;
+            }
+        });
+
+        if (totalCount === 0) {
+            resolve();
+            return;
+        }
         
         buttons.forEach(button => {
             const sound = button.getAttribute('data-sound');
+            // 跳過聲調符號的音效載入
+            if (toneMarks.includes(sound)) {
+                return;
+            }
+
             const audio = new Audio(`sounds/${sound}.mp3`);
             audio.preload = 'auto';
             
@@ -33,7 +54,11 @@ function preloadAudios() {
             
             audio.onerror = () => {
                 console.error(`Failed to load audio: ${sound}`);
-                reject(`Failed to load audio: ${sound}`);
+                loadedCount++;
+                if (loadedCount === totalCount) {
+                    hideLoadingMessage();
+                    resolve();
+                }
             };
             
             audioCache[sound] = audio;
@@ -57,6 +82,11 @@ function hideLoadingMessage() {
 
 // 修改播放音效函數
 function playSound(sound) {
+    // 如果是聲調符號，直接返回不播放音效
+    if (toneMarks.includes(sound)) {
+        return;
+    }
+
     if (audioCache[sound]) {
         // 如果音效正在播放，重置到開始位置
         audioCache[sound].currentTime = 0;
