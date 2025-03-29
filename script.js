@@ -6,7 +6,15 @@ const zhuyinExamples = {
     // ... 其他注音符號的對應關係
 };
 
-// 初始化音效
+// 預載入音效
+const audioCache = {};
+function preloadAudio() {
+    Object.keys(zhuyinExamples).forEach(sound => {
+        audioCache[sound] = new Audio(`sounds/${sound}.mp3`);
+    });
+}
+
+// 初始化按鍵事件
 function initAudio() {
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => {
@@ -20,10 +28,12 @@ function initAudio() {
 
 // 播放音效
 function playSound(sound) {
-    const audio = new Audio(`sounds/${sound}.mp3`);
-    audio.play().catch(error => {
-        console.log('播放失敗:', error);
-    });
+    if (audioCache[sound]) {
+        audioCache[sound].currentTime = 0; // 從頭播放
+        audioCache[sound].play().catch(error => {
+            console.log('播放失敗:', error);
+        });
+    }
 }
 
 // 顯示示例圖片
@@ -40,5 +50,8 @@ function showExample(sound) {
     }
 }
 
-// 頁面載入完成後初始化
-document.addEventListener('DOMContentLoaded', initAudio); 
+// 頁面載入完成後預載入音效並初始化按鍵
+document.addEventListener('DOMContentLoaded', () => {
+    preloadAudio();
+    initAudio();
+});
